@@ -70,7 +70,9 @@ public class CarRepositoryTests
             .Returns(new ElevatorSettings()
             {
                 CarCount = 3,
-                LobbyFloor = 1
+                LobbyFloor = 1,
+                MinFloor = -1,
+                MaxFloor = 10
             });
 
         var expected = new Car(2, 1, 0, 1);
@@ -92,7 +94,10 @@ public class CarRepositoryTests
         SettingsOptions.Setup(x => x.Value)
             .Returns(new ElevatorSettings()
             {
-                CarCount = 1
+                CarCount = 1,
+                LobbyFloor = 1,
+                MinFloor = -1,
+                MaxFloor = 10
             });
 
         Assert.That(Sut.GetById(2), Is.Null);
@@ -106,7 +111,9 @@ public class CarRepositoryTests
             .Returns(new ElevatorSettings()
             {
                 CarCount = 1,
-                LobbyFloor = lobbyFloor
+                LobbyFloor = lobbyFloor,
+                MinFloor = -1,
+                MaxFloor = 10
             });
 
         var actual = Sut.GetById(1);

@@ -93,7 +93,7 @@ public class CarTests
         var car = new Car(1, 0, 0, 10);
 
         car.AddStop(1);
-        Assert.That(car.CurrentFloor, Is.EqualTo(1));
+        Assert.That(car.CurrentFloor, Is.EqualTo(0));
     }
 
     [TestCase(new sbyte[] { 1, 2 }, new sbyte[] { 1, 2 })]

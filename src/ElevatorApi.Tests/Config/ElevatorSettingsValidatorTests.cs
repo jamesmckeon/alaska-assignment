@@ -3,6 +3,7 @@ using ElevatorApi.Api.Config;
 
 namespace ElevatorApi.Tests.Config;
 
+[Category("Unit")]
 public class ElevatorSettingsValidatorTests
 {
     private ElevatorSettingsValidator Sut { get; set; }
@@ -66,7 +67,7 @@ public class ElevatorSettingsValidatorTests
         Assert.Multiple(() =>
         {
             Assert.That(actual.Failed, Is.True);
-            Assert.That(actual.FailureMessage, Is.EqualTo("MinFloo must be less than MaxFloor"));
+            Assert.That(actual.FailureMessage, Is.EqualTo("MinFloor must be less than MaxFloor"));
         });
 
     }

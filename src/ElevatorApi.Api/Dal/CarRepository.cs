@@ -1,11 +1,11 @@
 using System.Collections.Concurrent;
 using ElevatorApi.Api;
 using ElevatorApi.Api.Config;
-using ElevatorApi.Models;
-using ElevatorApi.Tests.Services;
+using ElevatorApi.Api.Models;
+using ElevatorApi.Api.Services;
 using Microsoft.Extensions.Options;
 
-namespace ElevatorApi.Tests.Dal;
+namespace ElevatorApi.Api.Dal;
 
 public class CarRepository : ICarRepository
 {

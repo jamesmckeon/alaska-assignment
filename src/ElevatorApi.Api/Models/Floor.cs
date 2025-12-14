@@ -1,4 +1,4 @@
-namespace ElevatorApi.Models;
+namespace ElevatorApi.Api.Models;
 
 public sealed class Floor: IEquatable<Floor>
 {

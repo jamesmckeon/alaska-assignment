@@ -1,23 +1,13 @@
 using Microsoft.VisualBasic;
 
-namespace ElevatorApi.Models;
+namespace ElevatorApi.Api.Models;
 
 public sealed class Car: IEquatable<Car>
 {
     public byte Id { get; init; }
-    public IReadOnlyCollection<Floor> Destinations { get; } = new List<Floor>();
-    public Floor? NextFloor { get; private set; }
+    public IReadOnlyCollection<sbyte> DestinationFloors { get; } = new List<sbyte>();
+    public sbyte? NextFloorNumber { get; private set; }
     public bool? Ascending  { get; private set; }
-
-    public void AddDestination(Floor destination)
-    {
-        throw new NotImplementedException();
-    }
-
-    public void Move()
-    {
-        throw new NotImplementedException();
-    }
 
     public bool Equals(Car? other)
     {

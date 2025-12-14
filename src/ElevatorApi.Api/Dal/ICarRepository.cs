@@ -1,6 +1,7 @@
-using ElevatorApi.Models;
+using ElevatorApi.Api.Models;
+using ElevatorApi.Api.Models;
 
-namespace ElevatorApi.Tests.Services;
+namespace ElevatorApi.Api.Dal;
 
 public interface ICarRepository
 {

@@ -1,8 +1,8 @@
-using ElevatorApi.Models;
+using ElevatorApi.Api.Models;
 
-namespace ElevatorApi.Tests.Services;
+namespace ElevatorApi.Api.Services;
 
 public interface ICarService
 {
-    Car AssignCartoFloor(byte floorNumber);
+    Car? GetById(int id);
 }

@@ -9,7 +9,7 @@ public sealed class ElevatorSettingsValidator : IValidateOptions<ElevatorSetting
         ArgumentNullException.ThrowIfNull(options);
         
         if (options.CarCount < 1)
-            return ValidateOptionsResult.Fail("CarCount must be at least 1");
+            return ValidateOptionsResult.Fail("CarCount must be greater than zero");
 
         if (options.MinFloor >= options.MaxFloor)
             return ValidateOptionsResult.Fail("MinFloor must be less than MaxFloor");

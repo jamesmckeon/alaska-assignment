@@ -6,15 +6,20 @@ namespace ElevatorApi.Api.Models;
 
 public sealed class Car: IEquatable<Car>
 {
+    internal Car(byte id, sbyte initialFloor, CarStatus initialStatus = CarStatus.Idle)
+    {
+        Id = id;
+        CurrentFloor = initialFloor;
+        Status = initialStatus ;
+        DestinationFloors = new List<sbyte>();
+    }
     
-    public byte Id { get; init; }
-    public IReadOnlyCollection<sbyte> DestinationFloors { get; } = new List<sbyte>();
-    public sbyte CurrentFloor { get; set; }
+    public byte Id { get;  }
+    public IReadOnlyCollection<sbyte> DestinationFloors { get; }
+    public sbyte CurrentFloor { get; private set; }
     public sbyte? NextFloor{ get; private set; }
-    /// <summary>
-    /// will be null if "idle", i.e., there aren't any destinations in car's queue
-    /// </summary>
-    public bool? Ascending  { get; private set; }
+
+    public CarStatus Status  { get; private set; }
 
     public bool Equals(Car? other)
     {

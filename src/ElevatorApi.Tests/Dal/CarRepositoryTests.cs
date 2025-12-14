@@ -23,7 +23,7 @@ public class CarRepositoryTests
 
     [TestCase(1)]
     [TestCase(3)]
-    public void GetAll_VariousCarCounts_ReturnsExpected(byte carCount)
+    public void GetAll_MultipleCars_ReturnsExpected(byte carCount)
     {
         SettingsOptions.Setup(x => x.Value)
             .Returns(new ElevatorSettings()
@@ -32,31 +32,30 @@ public class CarRepositoryTests
             });
 
         var expected = Enumerable.Range(1, carCount)
-            .Select(id => new Car()
-            {
-                Id = (byte)id,
-            }).ToList().AsReadOnly();
+            .Select(id => new Car((byte)id, 0, CarStatus.Idle))
+            .ToList().AsReadOnly();
 
         var actual = Sut.GetAll();
 
         Assert.That(actual, Is.EquivalentTo(expected));
     }
-
-    [TestCase(-1)]
-    [TestCase(3)]
-    public void GetAll_VariousLobbyFloors_SetsCurrentFloor(sbyte lobbyFloor)
+    
+    public void GetAll_MultipleCars_SetsDefaults(sbyte initialFloor)
     {
         SettingsOptions.Setup(x => x.Value)
             .Returns(new ElevatorSettings()
             {
-                CarCount = 1,
-                LobbyFloor = lobbyFloor
+                CarCount = 3,
+                LobbyFloor = -1
             });
 
-        var actual = Sut.GetAll().Single();
+        var actual = Sut.GetAll();
 
-
-        Assert.That(actual.CurrentFloor, Is.EqualTo(lobbyFloor));
+        Assert.Multiple(() =>
+        {
+            Assert.That(actual.All(a => a.CurrentFloor == -1), Is.True);
+            Assert.That(actual.All(a => a.Status == CarStatus.Idle), Is.True);
+        });
     }
 
     #endregion
@@ -64,23 +63,28 @@ public class CarRepositoryTests
     #region GetById
 
     [Test]
-    public void GetById_CarExists_ReturnsCar()
+    public void GetById_CarExists_ReturnsExpectedCar()
     {
         SettingsOptions.Setup(x => x.Value)
             .Returns(new ElevatorSettings()
             {
-                CarCount = 3
+                CarCount = 3,
+                LobbyFloor = 1
             });
 
-        var expected = new Car()
-        {
-            Id = 2
-        };
-
+        var expected = new Car(2, 1, CarStatus.Idle);
         var actual = Sut.GetById(expected.Id);
 
         Assert.That(actual, Is.Not.Null);
-        Assert.That(actual, Is.EqualTo(expected));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(actual, Is.EqualTo(expected));
+            Assert.That(actual.CurrentFloor,
+                Is.EqualTo(1));
+            Assert.That(actual.Status,
+                Is.EqualTo(CarStatus.Idle));
+        });
     }
 
     [Test]
@@ -97,7 +101,7 @@ public class CarRepositoryTests
 
     [TestCase(-1)]
     [TestCase(3)]
-    public void GetById_VariousLobbyFloors_SetsCurrentFloor(sbyte lobbyFloor)
+    public void GetById_VariousLobbyFloors_SetsDefaults(sbyte lobbyFloor)
     {
         SettingsOptions.Setup(x => x.Value)
             .Returns(new ElevatorSettings()

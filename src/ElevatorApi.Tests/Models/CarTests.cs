@@ -105,4 +105,8 @@ public class CarTests
         Assert.That(firstCar.Equals(secondCar as Object), Is.False);
     }
     #endregion
+    
+    #region Move
+    
+    #endregion
 }

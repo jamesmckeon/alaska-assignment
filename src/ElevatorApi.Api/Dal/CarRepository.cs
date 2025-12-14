@@ -27,7 +27,11 @@ public class CarRepository : ICarRepository
             foreach (var id in Enumerable.Range(1, SettingsOptions.Value.CarCount)
                          .Select(i => (byte)i))
             {
-                Cars.TryAdd(id, new Car() { Id = id });
+                Cars.TryAdd(id, new Car()
+                {
+                    Id = id,
+                    CurrentFloor = SettingsOptions.Value.LobbyFloor
+                });
             }
         }
     }

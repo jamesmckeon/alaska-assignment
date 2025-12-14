@@ -25,13 +25,12 @@ public class CarRepositoryTests
     [TestCase(3)]
     public void GetAll_VariousCarCounts_ReturnsExpected(byte carCount)
     {
-        
         SettingsOptions.Setup(x => x.Value)
             .Returns(new ElevatorSettings()
             {
                 CarCount = carCount
             });
-        
+
         var expected = Enumerable.Range(1, carCount)
             .Select(id => new Car()
             {
@@ -41,6 +40,23 @@ public class CarRepositoryTests
         var actual = Sut.GetAll();
 
         Assert.That(actual, Is.EquivalentTo(expected));
+    }
+
+    [TestCase(-1)]
+    [TestCase(3)]
+    public void GetAll_VariousLobbyFloors_SetsCurrentFloor(sbyte lobbyFloor)
+    {
+        SettingsOptions.Setup(x => x.Value)
+            .Returns(new ElevatorSettings()
+            {
+                CarCount = 1,
+                LobbyFloor = lobbyFloor
+            });
+
+        var actual = Sut.GetAll().Single();
+
+
+        Assert.That(actual.CurrentFloor, Is.EqualTo(lobbyFloor));
     }
 
     #endregion
@@ -55,7 +71,7 @@ public class CarRepositoryTests
             {
                 CarCount = 3
             });
-        
+
         var expected = new Car()
         {
             Id = 2
@@ -75,8 +91,25 @@ public class CarRepositoryTests
             {
                 CarCount = 1
             });
-        
+
         Assert.That(Sut.GetById(2), Is.Null);
+    }
+
+    [TestCase(-1)]
+    [TestCase(3)]
+    public void GetById_VariousLobbyFloors_SetsCurrentFloor(sbyte lobbyFloor)
+    {
+        SettingsOptions.Setup(x => x.Value)
+            .Returns(new ElevatorSettings()
+            {
+                CarCount = 1,
+                LobbyFloor = lobbyFloor
+            });
+
+        var actual = Sut.GetById(1);
+
+        Assert.That(actual, Is.Not.Null);
+        Assert.That(actual.CurrentFloor, Is.EqualTo(lobbyFloor));
     }
 
     #endregion

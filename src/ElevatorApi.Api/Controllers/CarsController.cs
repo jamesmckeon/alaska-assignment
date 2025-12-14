@@ -5,7 +5,7 @@ namespace ElevatorApi.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class CarsController:ControllerBase
+public class CarsController : ControllerBase
 {
     private ILogger<CarsController> Logger { get; }
     private ICarService CarService { get; }
@@ -19,7 +19,6 @@ public class CarsController:ControllerBase
     [HttpGet("{carId}")]
     public IActionResult Index(byte carId)
     {
-        
         var car = CarService.GetById(carId);
 
         if (car == null)
@@ -28,8 +27,10 @@ public class CarsController:ControllerBase
         }
         else
         {
-            return Ok(car);
+            return Ok(MapCarResponse(car));
         }
-
     }
+
+    private static CarResponse MapCarResponse(Car car) =>
+        new(car.Id, car.NextFloor, car.CurrentFloor, car.Stops);
 }

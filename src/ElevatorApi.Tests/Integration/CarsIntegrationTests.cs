@@ -65,7 +65,7 @@ public class CarsIntegrationTests
         byte carId = 1;
 
         var response = await Get($"/api/cars/{carId}");
-        var car = await response.Content.ReadFromJsonAsync<Car>();
+        var car = await response.Content.ReadFromJsonAsync<CarResponse>();
 
         Assert.That(car, Is.Not.Null);
 

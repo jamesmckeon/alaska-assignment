@@ -13,6 +13,9 @@ public sealed class ElevatorSettingsValidator : IValidateOptions<ElevatorSetting
 
         if (options.MinFloor >= options.MaxFloor)
             return ValidateOptionsResult.Fail("MinFloor must be less than MaxFloor");
+        
+        if (options.LobbyFloor < options.MinFloor || options.LobbyFloor > options.MaxFloor)
+            return ValidateOptionsResult.Fail("LobbyFloor must be between MinFloor and MaxFloor");
 
         return ValidateOptionsResult.Success;
     }

@@ -40,6 +40,20 @@ public class CarService : ICarService
 
     public Car CallCar(sbyte floorNumber)
     {
-        throw new NotImplementedException();
+        if (floorNumber < Settings.Value.MinFloor || floorNumber > Settings.Value.MaxFloor)
+        {
+            throw new ArgumentOutOfRangeException($"floorNumber must be between {Settings.Value.MinFloor} and " +
+                                                  $"{Settings.Value.MaxFloor}");
+        }
+
+        var cars = CarRepository.GetAll();
+        Car? car = cars.FirstOrDefault(c => 
+            c.NextFloor == floorNumber || c.CurrentFloor == floorNumber);
+        
+
+        if (car == null)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

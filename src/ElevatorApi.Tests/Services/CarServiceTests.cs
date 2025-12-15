@@ -106,7 +106,7 @@ public class CarServiceTests
     }
 
     [Test]
-    public void CallCar_AscendingNearest_AssignsAscendingCar()
+    public void CallCar_BetweenAscendingFloors_AssignsAscendingCar()
     {
         var cars = SetupCars();
         var car = cars.First();
@@ -119,6 +119,23 @@ public class CarServiceTests
         {
             Assert.That(assigned.NextFloor, Is.EqualTo(7));
             Assert.That(assigned.Stops, Is.EqualTo(new sbyte[] { 7, 8 }));
+        });
+    }
+
+    [Test]
+    public void CallCar_AboveAscendingFloors_AssignsAscendingCar()
+    {
+        var cars = SetupCars();
+        var car = cars.First();
+
+        car.AddStop(5);
+
+        var assigned = Sut.CallCar(7);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(assigned.NextFloor, Is.EqualTo(5));
+            Assert.That(assigned.Stops, Is.EqualTo(new sbyte[] { 5, 7 }));
         });
     }
 
@@ -200,6 +217,7 @@ public class CarServiceTests
         });
     }
 
+
     [TestCase(-1)]
     [TestCase(6)]
     public void CallCar_InvalidFloorNumber_ThrowsExpected(sbyte floorNumber)
@@ -226,14 +244,6 @@ public class CarServiceTests
     /// </summary>
     private List<Car> SetupCars()
     {
-        //TODO this smells
-        Settings.Setup(s => s.Value.LobbyFloor)
-            .Returns(0);
-        Settings.Setup(s => s.Value.MinFloor)
-            .Returns(-2);
-        Settings.Setup(s => s.Value.MaxFloor)
-            .Returns(10);
-
         var cars = Enumerable.Range(1, 3).Select(i =>
                 new Car(
                     (byte)i,

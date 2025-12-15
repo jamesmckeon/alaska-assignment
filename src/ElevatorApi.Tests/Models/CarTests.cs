@@ -158,6 +158,34 @@ public class CarTests
 
     #endregion
 
+    [Test]
+    public void State_NoStops_ReturnsIdle()
+    {
+        var car = TestCar();
+        car.AddStop((sbyte)(car.CurrentFloor + 1));
+        car.MoveNext();
+
+        Assert.That(car.State, Is.EqualTo(CarState.Idle));
+    }
+
+    [Test]
+    public void State_AscendingStops_ReturnsAscending()
+    {
+        var car = TestCar();
+        car.AddStop((sbyte)(car.CurrentFloor + 1));
+
+        Assert.That(car.State, Is.EqualTo(CarState.Ascending));
+    }
+
+    [Test]
+    public void State_DescendingStops_ReturnsDescending()
+    {
+        var car = TestCar();
+        car.AddStop((sbyte)(car.CurrentFloor - 1));
+
+        Assert.That(car.State, Is.EqualTo(CarState.Descending));
+    }
+
     #region MoveNext
 
     [Test]
@@ -442,6 +470,9 @@ public class CarTests
 
     #endregion
 
+    #region State
+
+    #endregion
 
     private static Car TestCar() => new(1, 0, -2, 10);
 }

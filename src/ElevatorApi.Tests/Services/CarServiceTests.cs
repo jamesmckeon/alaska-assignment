@@ -101,122 +101,49 @@ public class CarServiceTests
     [Test]
     public void CallCar_AllIdle_AssignsCar()
     {
-        var car = Sut.CallCar(1);
-        Assert.That(car.NextFloor, Is.EqualTo(1));
-    }
-
-    [Test]
-    public void CallCar_BetweenAscendingFloors_AssignsAscendingCar()
-    {
-        var cars = SetupCars();
-        var car = cars.First();
-
-        car.AddStop(8);
-
-        var assigned = Sut.CallCar(7);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(assigned.NextFloor, Is.EqualTo(7));
-            Assert.That(assigned.Stops, Is.EqualTo(new sbyte[] { 7, 8 }));
-        });
-    }
-
-    [Test]
-    public void CallCar_AboveAscendingFloors_AssignsAscendingCar()
-    {
-        var cars = SetupCars();
-        var car = cars.First();
-
-        car.AddStop(5);
-
-        var assigned = Sut.CallCar(7);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(assigned.NextFloor, Is.EqualTo(5));
-            Assert.That(assigned.Stops, Is.EqualTo(new sbyte[] { 5, 7 }));
-        });
-    }
-
-    [Test]
-    public void CallCar_CarAtFloor_AssignsCar()
-    {
-        var cars = SetupCars();
-        var expected = cars.First();
-
-        expected.AddStop(1);
-        expected.MoveNext();
-
+        var cars = SetupAllCars();
         var actual = Sut.CallCar(1);
 
-        Assert.That(actual, Is.EqualTo(expected));
-    }
-
-    [Test]
-    public void CallCar_NoneIdle_AssignsClosest()
-    {
-        var cars = SetupCars();
-        var car = cars.First();
-
-        car.AddStop(8);
-        car.MoveNext();
-        car.AddStop(9);
-
-        var second = cars.Skip(1).First();
-        second.AddStop(6);
-        second.AddStop(5);
-
-        var expected = cars.Last();
-        expected.AddStop(1);
-
-        var assigned = Sut.CallCar(7);
-
         Assert.Multiple(() =>
         {
-            Assert.That(assigned.NextFloor, Is.EqualTo(1));
-            Assert.That(assigned.Stops, Is.EqualTo(new sbyte[] { 1, 7 }));
+            Assert.That(actual.NextFloor, Is.EqualTo(1));
+            Assert.That(actual.Stops, Is.EqualTo(new sbyte[] { 1 }));
+            Assert.That(cars.Where(c => c.Id != actual.Id),
+                Has.All.Property(nameof(Car.NextFloor)).Null);
+            Assert.That(cars.Where(c => c.Id != actual.Id),
+                Has.All.Property(nameof(Car.Stops)).Empty);
         });
     }
 
     [Test]
-    public void CallCar_DescendingNearest_AssignsDescendingCar()
+    public void CallCar_CarAtFloor_AssignsExpected()
     {
-        var cars = SetupCars();
-        var car = cars.First();
+        var (first, second, third) = SetupCars();
 
-        car.AddStop(-2);
+        first.AddStop(1);
+        first.MoveNext();
 
-        var assigned = Sut.CallCar(-1);
-
-        Assert.Multiple(() =>
-        {
-            Assert.That(assigned.NextFloor, Is.EqualTo(-1));
-            Assert.That(assigned.Stops, Is.EqualTo(new sbyte[] { -1, -2 }));
-        });
+        var actual = Sut.CallCar(1);
+        Assert.That(actual, Is.EqualTo(first));
     }
 
     [Test]
     public void CallCar_IdleNearest_AssignsIdleCar()
     {
-        var cars = SetupCars();
-        var ascendingCar = cars.First();
-        ascendingCar.AddStop(3);
+        var (first, second, third) = SetupCars();
 
-        var descendingCar = cars.Skip(1).First();
-        descendingCar.AddStop(-1);
+        first.AddStop(3);
+        second.AddStop(-1);
 
-        var expected = cars.Last();
         var actual = Sut.CallCar(1);
 
         Assert.Multiple(() =>
         {
-            Assert.That(actual.Id, Is.EqualTo(expected.Id));
+            Assert.That(actual, Is.EqualTo(third));
             Assert.That(actual.NextFloor, Is.EqualTo(1));
             Assert.That(actual.Stops, Is.EqualTo(new sbyte[] { 1 }));
         });
     }
-
 
     [TestCase(-1)]
     [TestCase(6)]
@@ -236,14 +163,189 @@ public class CarServiceTests
         });
     }
 
+    [Test]
+    public void CallCar_BeyondAllAscending_AssignsNearest()
+    {
+        // "beyond" in the sense that the called floor is above
+        // the highest stop for all cars
+        var (first, second, third) = SetupCars();
+
+        first.AddStop(1);
+        first.AddStop(3);
+
+        second.AddStop(2);
+        second.AddStop(5);
+
+        third.AddStop(3);
+        third.AddStop(6);
+
+        var actual = Sut.CallCar(8);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(actual, Is.EqualTo(third));
+            Assert.That(actual.NextFloor, Is.EqualTo(3));
+            Assert.That(actual.Stops, Is.EqualTo(new sbyte[] { 3, 6, 8 }));
+        });
+    }
+
+    [Test]
+    public void CallCar_WithinAllAscending_AssignsNearest()
+    {
+        var (first, second, third) = SetupCars();
+
+        first.AddStop(1);
+        first.AddStop(7);
+
+        second.AddStop(2);
+        second.AddStop(5);
+
+        third.AddStop(3);
+        third.AddStop(6);
+
+        var actual = Sut.CallCar(4);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(actual, Is.EqualTo(third));
+            Assert.That(actual.NextFloor, Is.EqualTo(4));
+            Assert.That(actual.Stops, Is.EqualTo(new sbyte[] { 3, 4, 6 }));
+        });
+    }
+
+    [Test]
+    public void CallCar_BelowAllAscending_AssignsNearest()
+    {
+        // "below" in the sense that the called floor is below
+        // the last stop for all cars; SUT should assign car with the
+        // nearest last stop to the called floor
+        var (first, second, third) = SetupCars();
+
+        first.AddStop(1);
+        first.AddStop(8);
+
+        second.AddStop(2);
+        second.AddStop(7);
+
+        third.AddStop(3);
+        third.AddStop(6);
+
+        var actual = Sut.CallCar(0);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(actual, Is.EqualTo(third));
+            Assert.That(actual.NextFloor, Is.EqualTo(3));
+            Assert.That(actual.Stops, Is.EqualTo(new sbyte[] { 3, 6, 8 }));
+        });
+    }
+
+    [Test]
+    public void CallCar_AllDescendingToSameFloor_AssignsExpected()
+    {
+        var (first, second, third) = SetupCars();
+
+        AddStops(first, 6, 3, 2, 1);
+        AddStops(second, 7, 5, 1);
+        AddStops(third, 6, 5, 4, 2, 1);
+
+        var actual = Sut.CallCar(0);
+
+        Assert.Multiple(() =>
+        {
+            // SUT should assign car with fewest stops
+            Assert.That(actual, Is.EqualTo(second));
+            Assert.That(actual.Stops, Is.EqualTo(new sbyte[] { 7, 5, 1, 0 }));
+        });
+    }
+
+    [Test]
+    public void CallCar_BeyondAllDescending_AssignsNearest()
+    {
+        var (first, second, third) = SetupCars();
+
+        AddStops(first, 8, 6, 1);
+        AddStops(second, 7, 4, 0);
+        AddStops(third, 10, 8, 4, 0);
+
+        var actual = Sut.CallCar(-2);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(actual, Is.EqualTo(second));
+            Assert.That(actual.Stops,
+                Is.EqualTo(new sbyte[] { 7, 4, 0, -2 }));
+        });
+    }
+
+    [Test]
+    public void CallCar_WithinAllDescending_AssignsFewestStops()
+    {
+        var (first, second, third) = SetupCars();
+
+        AddStops(first, 8, 6, 1);
+        AddStops(second, 7, 4);
+        AddStops(third, 10, 8, 4, 0);
+
+        var actual = Sut.CallCar(5);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(actual, Is.EqualTo(second));
+            Assert.That(actual.Stops,
+                Is.EqualTo(new sbyte[] { 7, 5, 4 }));
+        });
+    }
+
+    [Test]
+    public void CallCar_WithinAllDescending_AssignsClosestCar()
+    {
+        var (first, second, third) = SetupCars();
+
+        AddStops(first, 8, 4);
+        AddStops(second, 7, 3);
+        AddStops(third, 10, 8, 4);
+
+        var actual = Sut.CallCar(5);
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(actual, Is.EqualTo(first));
+            Assert.That(actual.Stops,
+                Is.EqualTo(new sbyte[] { 8, 5, 4 }));
+        });
+    }
+
     #endregion
 
+    #region Helpers
+
     /// <summary>
-    /// Creates a list of test cars and sets up
-    /// repository to return them, also sets up ElevatorSettings
+    /// sets up repository to return a list of cars and
+    /// returns each car in the list
     /// </summary>
-    private List<Car> SetupCars()
+    private (Car first, Car second, Car third) SetupCars()
     {
+        var cars = SetupAllCars();
+        return (cars.First(), cars.Skip(1).First(), cars.Last());
+    }
+
+    /// <summary>
+    /// sets up repository to return a list of cars and returns the list
+    /// </summary>
+    private ReadOnlyCollection<Car> SetupAllCars()
+    {
+        var settings = new ElevatorSettings()
+        {
+            CarCount = 3,
+            LobbyFloor = 0,
+            MinFloor = -2,
+            MaxFloor = 10
+        };
+
+        Settings.Setup((s => s.Value))
+            .Returns(settings);
+
         var cars = Enumerable.Range(1, 3).Select(i =>
                 new Car(
                     (byte)i,
@@ -253,6 +355,21 @@ public class CarServiceTests
         Repository.Setup(s => s.GetAll())
             .Returns(cars);
 
-        return cars;
+        return new(cars);
     }
+
+    /// <summary>
+    /// Assigns stops to a car in the order that they appear in <paramref name="floors"/>
+    /// </summary>
+    /// <param name="car">The car to assign stops to</param>
+    /// <param name="floors">The stops to assign</param>
+    private static void AddStops(Car car, params IEnumerable<sbyte> floors)
+    {
+        foreach (var floor in floors)
+        {
+            car.AddStop(floor);
+        }
+    }
+
+    #endregion
 }

@@ -40,20 +40,51 @@ public class CarService : ICarService
 
     public Car CallCar(sbyte floorNumber)
     {
-        if (floorNumber < Settings.Value.MinFloor || floorNumber > Settings.Value.MaxFloor)
-        {
-            throw new ArgumentOutOfRangeException($"floorNumber must be between {Settings.Value.MinFloor} and " +
-                                                  $"{Settings.Value.MaxFloor}");
-        }
+        ValidateFloor(floorNumber);
 
         var cars = CarRepository.GetAll();
-        Car? car = cars.FirstOrDefault(c => 
-            c.NextFloor == floorNumber || c.CurrentFloor == floorNumber);
-        
+        Car? car = cars.FirstOrDefault(c =>
+            c.State == CarState.Idle ||
+            c.NextFloor == floorNumber ||
+            c.CurrentFloor == floorNumber);
 
         if (car == null)
         {
-            throw new NotImplementedException();
+            var candidates = cars.Where(c =>
+                    floorNumber > c.NextFloor ? c.State == CarState.Ascending : c.State == CarState.Descending)
+                .ToList();
+
+            if (candidates.Count == 1)
+            {
+                return candidates.Single();
+            }
+            else
+            {
+                var minStops = candidates
+                    .Select(c => c.Stops.Count).Min();
+
+                if (candidates.Count(a => a.Stops.Count == minStops) == 1)
+                {
+                    return candidates.Single(s => s.Stops.Count == minStops);
+                }
+                else
+                {
+                    // var closest = candidates.Where(c => c.Stops.Count == minStops )
+                    throw new NotImplementedException();
+                }
+            }
+        }
+        
+        car.AddStop(floorNumber);
+        return car;
+    }
+
+    private void ValidateFloor(sbyte floorNumber)
+        {
+            if (floorNumber < Settings.Value.MinFloor || floorNumber > Settings.Value.MaxFloor)
+            {
+                throw new ArgumentOutOfRangeException($"floorNumber must be between {Settings.Value.MinFloor} and " +
+                                                      $"{Settings.Value.MaxFloor}");
+            }
         }
     }
-}

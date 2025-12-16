@@ -7,15 +7,40 @@ namespace ElevatorApi.Api.Models;
 
 public sealed class Car : IEquatable<Car>
 {
+    private readonly Lock _carLock = new();
+
+    #region Properties
+
     private (sbyte MinFloor, sbyte MaxFloor) FloorRange { get; }
     public byte Id { get; }
-
     public IReadOnlyCollection<sbyte> Stops => GetStops();
     public sbyte CurrentFloor { get; private set; }
     public sbyte? NextFloor => Stops.Count > 0 ? Stops.First() : null;
     private bool? Ascending { get; set; }
     private SortedSet<sbyte> AscendingStops { get; }
     private SortedSet<sbyte> DescendingStops { get; }
+
+    public CarState State
+    {
+        get
+        {
+            lock (_carLock)
+            {
+                if (Ascending == null)
+                {
+                    return CarState.Idle;
+                }
+                else
+                {
+                    return Ascending.Value ? CarState.Ascending : CarState.Descending;
+                }
+            }
+        }
+    }
+
+    #endregion
+
+    #region Constructors
 
     internal Car(byte id, sbyte initialFloor, sbyte minFloor, sbyte maxFloor)
     {
@@ -37,6 +62,10 @@ public sealed class Car : IEquatable<Car>
     {
     }
 
+    #endregion
+
+    #region Equals
+
     public bool Equals(Car? other)
     {
         return other != null && Id == other.Id;
@@ -52,63 +81,65 @@ public sealed class Car : IEquatable<Car>
         return Equals(obj as Car);
     }
 
+    #endregion
+
+    #region Methods
+
     public void AddStop(sbyte floorNumber)
+    {
+        ValidateFloorNumber(floorNumber);
+
+        lock (_carLock)
+        {
+            if (!Stops.Contains(floorNumber) && floorNumber != CurrentFloor)
+            {
+                if (floorNumber < CurrentFloor)
+                {
+                    DescendingStops.Add(floorNumber);
+                }
+                else
+                {
+                    AscendingStops.Add(floorNumber);
+                }
+
+                if (!Ascending.HasValue)
+                {
+                    Ascending = floorNumber > CurrentFloor;
+                }
+            }
+        }
+    }
+
+    private void ValidateFloorNumber(sbyte floorNumber)
     {
         if (floorNumber < FloorRange.MinFloor || floorNumber > FloorRange.MaxFloor)
         {
             throw new ArgumentOutOfRangeException(nameof(floorNumber),
                 $"floorNumber must be between {FloorRange.MinFloor} and {FloorRange.MaxFloor}.");
         }
-
-        if (!Stops.Contains(floorNumber) && floorNumber != CurrentFloor)
-        {
-            if (floorNumber < CurrentFloor)
-            {
-                DescendingStops.Add(floorNumber);
-            }
-            else
-            {
-                AscendingStops.Add(floorNumber);
-            }
-
-            if (!Ascending.HasValue)
-            {
-                Ascending = floorNumber > CurrentFloor;
-            }
-        }
     }
 
     private ReadOnlyCollection<sbyte> GetStops()
     {
-        //TODO Refactor This!
-
-        // ascending by default if idle
-        return !Ascending.HasValue || Ascending == true
-            ? AscendingStops.Concat(DescendingStops.Reverse()).ToList().AsReadOnly()
-            : DescendingStops.Reverse().Concat(AscendingStops).ToList().AsReadOnly();
-    }
-
-    public CarState State
-    {
-        get
+        lock (_carLock)
         {
-            if (Stops.Count == 0)
-            {
-                return CarState.Idle;
-            }
-            else
-            {
-                return NextFloor > CurrentFloor ? CarState.Ascending : CarState.Descending;
-            }
+            // ascending by default if idle
+            return !Ascending.HasValue || Ascending == true
+                ? AscendingStops.Concat(DescendingStops.Reverse()).ToList().AsReadOnly()
+                : DescendingStops.Reverse().Concat(AscendingStops).ToList().AsReadOnly();
         }
     }
 
+
     public void MoveNext()
     {
-        if (NextFloor.HasValue)
+        lock (_carLock)
         {
-            CurrentFloor = NextFloor.Value;
-            RemoveStop(CurrentFloor);
+            if (NextFloor.HasValue)
+            {
+                CurrentFloor = NextFloor.Value;
+                RemoveStop(CurrentFloor);
+            }
         }
     }
 
@@ -117,4 +148,6 @@ public sealed class Car : IEquatable<Car>
         DescendingStops.Remove(floorNumber);
         AscendingStops.Remove(floorNumber);
     }
+
+    #endregion
 }

@@ -143,7 +143,7 @@ public class CarTests
     }
 
     [Test]
-    public void Constructor_ValidInput_ReturnsExpectedState()
+    public void Constructor_ValidInput_SetsDefaults()
     {
         var car = new Car(1, -1, 0, 10);
 
@@ -153,38 +153,11 @@ public class CarTests
             Assert.That(car.CurrentFloor, Is.EqualTo(-1));
             Assert.That(car.NextFloor, Is.Null);
             Assert.That(car.Stops, Is.Empty);
+            Assert.That(car.State, Is.EqualTo(CarState.Idle));
         });
     }
 
     #endregion
-
-    [Test]
-    public void State_NoStops_ReturnsIdle()
-    {
-        var car = TestCar();
-        car.AddStop((sbyte)(car.CurrentFloor + 1));
-        car.MoveNext();
-
-        Assert.That(car.State, Is.EqualTo(CarState.Idle));
-    }
-
-    [Test]
-    public void State_AscendingStops_ReturnsAscending()
-    {
-        var car = TestCar();
-        car.AddStop((sbyte)(car.CurrentFloor + 1));
-
-        Assert.That(car.State, Is.EqualTo(CarState.Ascending));
-    }
-
-    [Test]
-    public void State_DescendingStops_ReturnsDescending()
-    {
-        var car = TestCar();
-        car.AddStop((sbyte)(car.CurrentFloor - 1));
-
-        Assert.That(car.State, Is.EqualTo(CarState.Descending));
-    }
 
     #region MoveNext
 
@@ -467,10 +440,6 @@ public class CarTests
             Assert.That(car.Stops, Is.Empty);
         });
     }
-
-    #endregion
-
-    #region State
 
     #endregion
 

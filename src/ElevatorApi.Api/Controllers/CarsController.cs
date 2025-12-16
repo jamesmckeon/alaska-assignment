@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ElevatorApi.Api.Controllers;
 
 [ApiController]
-[Route("api/v1/[controller]")]
+[Route("[controller]")]
 public class CarsController : ControllerBase
 {
     private ILogger<CarsController> Logger { get; }

@@ -106,7 +106,7 @@ public sealed class Car : IEquatable<Car>
     /// <summary>
     /// Adds a stop to the car
     /// </summary>
-    /// <param name="floorNumber"></param>
+    /// <param name="floorNumber">the floor # to add to the car's list of stops</param>
     /// <exception cref="ArgumentOutOfRangeException">Thrown
     /// when <param name="floorNumber"/> is invalid</exception>
     public void AddStop(sbyte floorNumber)

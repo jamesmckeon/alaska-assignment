@@ -1,10 +1,10 @@
 # Elevator Control System API
 
-A RESTful API for managing elevator control systems, designed to provide integration testing capabilities for dependent teams.
+A RESTful elevator control system API for integration/E2E testing
 
 ## Prerequisites
 
-- .NET 9.0 SDK
+- [.NET 9.0 SDK](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 
 ## Quick Start
 
@@ -32,9 +32,9 @@ The elevator system can be configured in `src/ElevatorApi.Api/appsettings.json`:
 }
 ```
 
-Modify these values to test different building configurations without recompiling.
-
 ## API Endpoints
+
+- swagger ui is available at http://localhost:8080/swagger
 
 ### Get Car State
 
@@ -60,61 +60,54 @@ curl http://localhost:8080/api/cars/1
 
 ```bash
 # Request an elevator to pick up at floor 5
-curl -X PUT "http://localhost:8080/api/pickup-requests?floorNumber=5"
+curl -X POST "http://localhost:8080/cars/call/5"
 ```
 
 ### Add Destination
 
 ```bash
 # Add destination floor 10 to car 1
-curl -X PUT http://localhost:8080/api/cars/1/destinations/10
+curl -X POST http://localhost:8080/cars/1/stops/10
 ```
 
 ### Advance Car
 
 ```bash
 # Move car 1 to its next floor
-curl -X POST http://localhost:8080/api/cars/1/advance
+curl -X POST http://localhost:8080/cars/1/move
 ```
 
-## Testing Strategy
-
-### Unit Tests
-
-- **Services**: Business logic and elevator algorithms
-- **Repositories**: Data access and car management
-- **Validators**: Configuration and input validation
-
-### Integration Tests
-
-- **Full API workflows**: End-to-end request/response testing using WebApplicationFactory
-- **Controller coverage**: Achieved through integration tests (controllers are thin pass-through layers)
+## Testing
 
 Run tests:
+
 ```bash
 cd src/ElevatorApi.Tests
 dotnet test
 ```
 
-## Project Structure
+Run by category:
 
-```
-src/
-├── ElevatorApi.Api/
-│   ├── Controllers/      # API endpoints
-│   ├── Services/         # Business logic
-│   ├── Dal/              # Data access (repositories)
-│   ├── Models/           # Domain models
-│   └── Config/           # Configuration classes
-└── ElevatorApi.Tests/
-    ├── Controllers/      # Integration tests
-    ├── Services/         # Unit tests for services
-    ├── Dal/              # Unit tests for repositories
-    └── Config/           # Unit tests for configuration
+```bash
+  dotnet test --filter Category=Unit
+  dotnet test --filter Category=Integration
 ```
 
-## Architecture Decisions
+### Car Assignment Rules
 
-- **In-memory storage**: Using `ConcurrentDictionary` for thread-safe car state management
-- **No async/await**: All operations are synchronous (in-memory only, no I/O)
-- **Configuration-based**: Building parameters configurable for testing different scenarios
+**When called floor is within the range of assigned stops for all cars:**
+
+1. Assign car with fewest stops before reaching called floor
+2. Tiebreaker: car whose nearest existing stop is closest to called floor
+3. Rationale: minimizes wait time (door cycles > travel distance)
+
+Example: Called floor = 1
+
+- Car 1: stops [7,6,-1] → 2 stops before floor 1, nearest stop -1 (2 floors away)
+- Car 2: stops [8,5,0] → 2 stops before floor 1, nearest stop 0 (1 floor away) ✓
+- Car 3: stops [7,6,2,-2] → 3 stops before floor 1
+- Result: Car 2 assigned (tied on stops, wins on proximity)
+
+**Idle behavior:**
+
+- Cars remain at current floor when idle

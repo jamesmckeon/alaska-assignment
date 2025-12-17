@@ -44,6 +44,14 @@ public class CarService : ICarService
         ValidateFloor(floorNumber);
 
         Car? car = null;
+        var cars = CarRepository.GetAll().ToList();
+
+        var hasStop = cars.SingleOrDefault(c => c.Stops.Contains(floorNumber));
+
+        if (hasStop != null)
+        {
+            return hasStop;
+        }
 
         var carDistances = CarRepository.GetAll().Select(c =>
             new

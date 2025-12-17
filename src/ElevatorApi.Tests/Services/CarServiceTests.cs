@@ -314,9 +314,9 @@ public class CarServiceTests
 
         Assert.Multiple(() =>
         {
-            Assert.That(actual, Is.EqualTo(first));
+            Assert.That(actual, Is.EqualTo(second));
             Assert.That(actual.Stops,
-                Is.EqualTo(new sbyte[] { 5, 4 }));
+                Is.EqualTo(new sbyte[] { 5, 3 }));
         });
     }
 

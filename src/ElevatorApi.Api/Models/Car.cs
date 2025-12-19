@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.VisualBasic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using ElevatorApi.Api.Exceptions;
 
 namespace ElevatorApi.Api.Models;
 
@@ -138,8 +139,7 @@ public sealed class Car : IEquatable<Car>
     {
         if (floorNumber < FloorRange.MinFloor || floorNumber > FloorRange.MaxFloor)
         {
-            throw new ArgumentOutOfRangeException(nameof(floorNumber),
-                $"floorNumber must be between {FloorRange.MinFloor} and {FloorRange.MaxFloor}.");
+            throw new FloorNotFoundException(floorNumber);
         }
     }
 

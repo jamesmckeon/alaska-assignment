@@ -33,10 +33,11 @@ internal sealed class SingleCarTests : TestsBase
         });
     }
 
-    [Test]
-    public async Task Index_CarDoesntExist_ReturnsNotFound()
+    [TestCase(0)]
+    [TestCase(2)]
+    public async Task Index_CarDoesntExist_ReturnsNotFound(byte carId)
     {
-        var response = await GetCarResponse(2);
+        var response = await GetCarResponse(carId);
         Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
     }
 
@@ -71,6 +72,15 @@ internal sealed class SingleCarTests : TestsBase
         sbyte floorNumber = -2;
 
         var response = await AddCarStopResponse(carId, floorNumber);
+
+        Assert.That(response.StatusCode,
+            Is.EqualTo(HttpStatusCode.NotFound));
+    }
+
+    [Test]
+    public async Task AddStop_InvalidFloor_ReturnsNotFound()
+    {
+        var response = await AddCarStopResponse(1, -3);
 
         Assert.That(response.StatusCode,
             Is.EqualTo(HttpStatusCode.NotFound));

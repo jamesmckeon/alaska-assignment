@@ -27,34 +27,39 @@ The elevator system can be configured in `src/ElevatorApi.Api/appsettings.json`:
     "MinFloor": -2,        // Minimum valid floor number
     "MaxFloor": 50,        // Maximum valid floor number
     "NumberOfCars": 3,      // Number of elevator cars in the system
-    "LobbyFloor": 0.       // The start floor for all cars 
+    "LobbyFloor": 0       // The start floor for all cars 
   }
 }
 ```
 
 ## API Endpoints
 
-- swagger ui is available at http://localhost:8080/swagger
+- endpoint details can be browsed via the swagger ui available at [http://localhost:8080/swagger]
+
+### CarResponse Object
+
+All endpoints return a `CarResponse` object with the following structure:
+
+```json
+{
+  "carId": 1,           // Unique identifier for the elevator car
+  "currentFloor": 0,    // Current floor position of the car
+  "nextFloor": null,    // Next scheduled floor (null if no stops)
+  "stops": []           // All stops assigned to the car, in order
+}
+```
 
 ### Get Car State
 
 ```bash
-# Get current state of a specific car
-curl http://localhost:8080/api/cars/1
+# Get current state of car #1
+curl http://localhost:8080/cars/1
 ```
 
-**Response:**
+**Response Codes:**
 
-```json
-{
-  "carId": 1,
-  "currentFloor": 0,
-  "direction": "idle",
-  "nextFloor": null,
-  "origins": [],
-  "destinations": []
-}
-```
+- `200 OK` - Car state retrieved successfully
+- `404 Not Found` - Invalid car ID
 
 ### Request Pickup
 
@@ -63,19 +68,50 @@ curl http://localhost:8080/api/cars/1
 curl -X POST "http://localhost:8080/cars/call/5"
 ```
 
-### Add Destination
+**Response Codes:**
+
+- `200 OK` - Pickup request processed successfully
+- `400 Bad Request` - Invalid floor number
+
+### Add Stop to Car
 
 ```bash
-# Add destination floor 10 to car 1
+# Add a stop at floor 10 to car 1
 curl -X POST http://localhost:8080/cars/1/stops/10
 ```
+
+**Response Codes:**
+
+- `200 OK` - Stop added successfully
+- `400 Bad Request` - Invalid floor number
+- `404 Not Found` - Invalid car ID
 
 ### Advance Car
 
 ```bash
-# Move car 1 to its next floor
+# Move car 1 to its next stop
 curl -X POST http://localhost:8080/cars/1/move
 ```
+
+**Response Codes:**
+
+- `200 OK` - Car advanced successfully
+- `404 Not Found` - Invalid car ID
+
+## Demo Client
+
+A demo client application is included to demonstrate API usage and test the elevator system.
+
+### Running the Demo Client
+
+Make sure the API is running first (see [Quick Start](#quick-start)), then in a separate terminal:
+
+```bash
+cd src/ElevatorApi.Client
+dotnet run
+```
+
+The demo client will connect to the API at `http://localhost:8080` and demonstrate various elevator operations.
 
 ## Testing
 
@@ -93,21 +129,34 @@ Run by category:
   dotnet test --filter Category=Integration
 ```
 
-### Car Assignment Rules
+## Car Assignment Algorithm
 
-**When called floor is within the range of assigned stops for all cars:**
+The system uses the following rules when assigning a car to a requested pickup floor, towards minimizing passenger wait time.
 
-1. Assign car with fewest stops before reaching called floor
-2. Tiebreaker: car whose nearest existing stop is closest to called floor
-3. Rationale: minimizes wait time (door cycles > travel distance)
+### Assignment Priority
 
-Example: Called floor = 1
+#### 1. Idle Cars First
 
-- Car 1: stops [7,6,-1] → 2 stops before floor 1, nearest stop -1 (2 floors away)
-- Car 2: stops [8,5,0] → 2 stops before floor 1, nearest stop 0 (1 floor away) ✓
-- Car 3: stops [7,6,2,-2] → 3 stops before floor 1
-- Result: Car 2 assigned (tied on stops, wins on proximity)
+Idle cars (cars with no assigned stops) are always assigned first when available. If multiple idle cars exist, the closest one is selected.
 
-**Idle behavior:**
+#### 2. Busy Car Selection
 
-- Cars remain at current floor when idle
+When no idle cars are available, the system selects the optimal car using these criteria:
+
+1. **Primary criterion**: Car with fewest stops before reaching the called floor
+2. **Tiebreaker**: Car whose nearest existing stop is closest to the called floor
+3. **Rationale**: Door opening/closing cycles impact wait time more than travel distance
+
+### Example Scenario
+
+When a pickup is requested at floor 5:
+
+- **Car 1**: `stops [1, 2]` → 2 stops before floor 5, nearest stop is 2 (3 floors away)
+- **Car 2**: `stops [12, 9, 7]` → 3 stops before floor 5, nearest stop is 7 (2 floors away)
+- **Car 3**: `stops [10, 7]` → 2 stops before floor 5, nearest stop is 7 (2 floors away) ✓
+
+**Result**: Car 3 is assigned (tied with Car 1 on stop count at 2 stops, but Car 3's nearest stop at floor 7 is closer to floor 5 than Car 1's nearest stop at floor 2)
+
+### Idle Behavior
+
+Cars remain stationary at their current floor when idle, rather than returning to a home/lobby position.

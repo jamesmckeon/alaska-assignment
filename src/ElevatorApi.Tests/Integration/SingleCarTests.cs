@@ -78,12 +78,12 @@ internal sealed class SingleCarTests : TestsBase
     }
 
     [Test]
-    public async Task AddStop_InvalidFloor_ReturnsNotFound()
+    public async Task AddStop_InvalidFloor_ReturnsBadRequest()
     {
         var response = await AddCarStopResponse(1, -3);
 
         Assert.That(response.StatusCode,
-            Is.EqualTo(HttpStatusCode.NotFound));
+            Is.EqualTo(HttpStatusCode.BadRequest));
     }
 
     #endregion

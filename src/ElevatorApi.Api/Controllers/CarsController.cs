@@ -40,9 +40,13 @@ public class CarsController : ControllerBase
             var car = CarService.AddStop(carId, floorNumber);
             return Ok(MapCarResponse(car));
         }
-        catch (Exception ex) when (ex is CarNotFoundException || ex is FloorNotFoundException)
+        catch (CarNotFoundException ex) 
         {
             return NotFound(ex.Message);
+        }
+        catch (FloorNotFoundException ex)
+        {
+            return BadRequest(ex.Message);
         }
     }
 

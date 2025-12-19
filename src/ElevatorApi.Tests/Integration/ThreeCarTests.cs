@@ -39,7 +39,7 @@ internal sealed class ThreeCarTests : TestsBase
     [TestCase(9)]
     public async Task MultipleEndpoints_FloorDoesntExist_ReturnsNotFound(sbyte floorNumber)
     {
-        var methods = new Task<HttpResponseMessage>[]
+        var methods = new[]
         {
             AddCarStopResponse(1, floorNumber),
             CallCarResponse(floorNumber)
@@ -49,7 +49,8 @@ internal sealed class ThreeCarTests : TestsBase
         {
             var response = await method;
 
-            Assert.That(response.StatusCode, Is.EqualTo(HttpStatusCode.NotFound));
+            Assert.That(response.StatusCode,
+                Is.EqualTo(HttpStatusCode.BadRequest));
         }
     }
 

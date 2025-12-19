@@ -39,7 +39,7 @@ try
         return response;
     };
 
-    // executes a POST request and returns the corresponding CarResponse DTO if successful
+    // executes a request and returns the corresponding CarResponse DTO if successful
     var pingCar = async (string endpoint, HttpMethod method) =>
     {
         HttpResponseMessage response;
@@ -63,26 +63,25 @@ try
         }
 
         var car = await response.Content.ReadFromJsonAsync<CarResponse>();
-        Console.WriteLine($"Returned {JsonSerializer.Serialize(car)}");
+        Console.WriteLine($"Response: {JsonSerializer.Serialize(car)}");
         return car;
     };
 
     var moveCar = async (CarResponse carToMove) =>
     {
-        
         Console.WriteLine($"Moving car #{carToMove.Id} to next stop ...");
 
         var response = await client.PostAsync(new Uri($"/cars/{carToMove.Id}/move", UriKind.Relative), null);
 
         if (!response.IsSuccessStatusCode)
         {
-            Exit($"Error: /cars/move endpoint returned {response.StatusCode}.");
+            Exit($"Error: move endpoint returned {response.StatusCode}.");
         }
 
         var movedCar = await response.Content.ReadFromJsonAsync<CarResponse>();
-        Console.WriteLine($"Returned {JsonSerializer.Serialize(movedCar)}");
+        Console.WriteLine($"Response: {JsonSerializer.Serialize(movedCar)}");
         Console.WriteLine("");
-        
+
         return movedCar;
     };
 
@@ -92,12 +91,23 @@ try
     await ping("/health");
     Console.WriteLine();
 
-    Console.WriteLine("Requesting car for floor #1 ...");
-    var lobby = await pingCar("/cars/call/1", HttpMethod.Post);
+    Console.WriteLine("This simulates a building with two elevators, a basement floor, a lobby, " + 
+                      "and 5 floors above it.  Both cars start at the lobby by default.");
+    Console.WriteLine();
+    
+    Console.WriteLine("Car #1 initial state ...");
+    await pingCar("/cars/1", HttpMethod.Get);
+    
+    Console.WriteLine("Car #2 initial state ...");
+    await pingCar("/cars/2", HttpMethod.Get);
     Console.WriteLine();
 
-    await moveCar(lobby);
+    Console.WriteLine("Requesting car for floor #1 ...");
+    var firstFloor = await pingCar("/cars/call/1", HttpMethod.Post);
+    Console.WriteLine();
 
+    await moveCar(firstFloor);
+/*
     Console.WriteLine($"Adding stop to car #{lobby.Id} ...");
     await pingCar($"/cars/{lobby.Id}/stops/2", HttpMethod.Post);
     Console.WriteLine();
@@ -117,7 +127,7 @@ try
     Console.WriteLine();
 
     await moveCar(basement);
-
+*/
     Console.WriteLine("All done.  Press any key to exit...");
     Console.ReadKey();
 }

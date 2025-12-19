@@ -19,15 +19,15 @@ The API will be available at `http://localhost:8080`
 
 ## Configuration
 
-The elevator system can be configured in `src/ElevatorApi.Api/appsettings.json`:
+The elevator system can be configured in `src/ElevatorApi.Api/appsettings.json`.  The default configuration is listed below:
 
 ```json
 {
   "ElevatorSettings": {
-    "MinFloor": -2,        // Minimum valid floor number
-    "MaxFloor": 50,        // Maximum valid floor number
-    "NumberOfCars": 3,      // Number of elevator cars in the system
-    "LobbyFloor": 0       // The start floor for all cars 
+    "CarCount": 2,         // Number of elevator cars in the system
+    "MinFloor": -1,        // Minimum valid floor number
+    "MaxFloor": 5,         // Maximum valid floor number
+    "lobbyFloor": 0        // The start floor for all cars
   }
 }
 ```
@@ -35,6 +35,7 @@ The elevator system can be configured in `src/ElevatorApi.Api/appsettings.json`:
 ## API Endpoints
 
 - endpoint details can be browsed via the swagger ui available at [http://localhost:8080/swagger]
+- api health can be checked via the /health endpoint
 
 ### CarResponse Object
 
@@ -42,7 +43,7 @@ All endpoints return a `CarResponse` object with the following structure:
 
 ```json
 {
-  "carId": 1,           // Unique identifier for the elevator car
+  "id": 1,           // Unique identifier for the elevator car
   "currentFloor": 0,    // Current floor position of the car
   "nextFloor": null,    // Next scheduled floor (null if no stops)
   "stops": []           // All stops assigned to the car, in order
@@ -76,8 +77,8 @@ curl -X POST "http://localhost:8080/cars/call/5"
 ### Add Stop to Car
 
 ```bash
-# Add a stop at floor 10 to car 1
-curl -X POST http://localhost:8080/cars/1/stops/10
+# Add a stop at floor 4 to car 1
+curl -X POST http://localhost:8080/cars/1/stops/4
 ```
 
 **Response Codes:**

@@ -75,14 +75,38 @@ internal sealed class ThreeCarTests : TestsBase
     [Test]
     public async Task CallCar_FloorAlreadyAssigned_DoesntReassign()
     {
-        var carOne = await ParseCar(await CallCarResponse(1));
-        var carTwo = await ParseCar(await CallCarResponse(1));
+        var carOne = await ParseCar(await CallCarResponse(2));
+        var carTwo = await ParseCar(await CallCarResponse(2));
 
         Assert.Multiple(() =>
         {
-            Assert.That(carOne.NextFloor, Is.EqualTo(1));
-            Assert.That(carTwo.NextFloor, Is.EqualTo(1));
+            Assert.That(carOne.NextFloor, Is.EqualTo(2));
+            Assert.That(carTwo.NextFloor, Is.EqualTo(2));
             Assert.That(carOne.Id, Is.EqualTo(carTwo.Id));
+        });
+    }
+
+    [Test]
+    public async Task CallCar_CarAtFloor_DoesntReassign()
+    {
+        // all cars start at floor 1 (in this class/scenario)
+        // so SUT shouldn't assign floor 1 to any car initially
+        var lobbyCar = await ParseCar(await CallCarResponse(1));
+        Assert.That(lobbyCar.NextFloor, Is.Null);
+
+        await AddCarStopResponse(lobbyCar.Id, 2);
+        var movedCar = await ParseCar(await MoveCarResponse(lobbyCar.Id));
+
+        Assert.That(movedCar.CurrentFloor, Is.EqualTo(2));
+
+        // likewise car is already at floor 2, SUT shouldn't assign
+        // this floor to any cars
+        var floorTwoCar = await ParseCar(await CallCarResponse(2));
+
+        Assert.Multiple(() =>
+        {
+            Assert.That(floorTwoCar.NextFloor, Is.Null);
+            Assert.That(floorTwoCar.Id, Is.EqualTo(movedCar.Id));
         });
     }
 

@@ -60,15 +60,15 @@ internal sealed class ThreeCarTests : TestsBase
     [Test]
     public async Task CallCar_AllIdle_AssignsIdleCar()
     {
-        var carOne = await ParseCar(await CallCarResponse(1));
-        var carTwo = await ParseCar(await CallCarResponse(2));
-        var carThree = await ParseCar(await CallCarResponse(3));
+        var carOne = await ParseCar(await CallCarResponse(2));
+        var carTwo = await ParseCar(await CallCarResponse(3));
+        var carThree = await ParseCar(await CallCarResponse(4));
 
         Assert.Multiple(() =>
         {
-            Assert.That(carOne.NextFloor, Is.EqualTo(1));
-            Assert.That(carTwo.NextFloor, Is.EqualTo(2));
-            Assert.That(carThree.NextFloor, Is.EqualTo(3));
+            Assert.That(carOne.NextFloor, Is.EqualTo(2));
+            Assert.That(carTwo.NextFloor, Is.EqualTo(3));
+            Assert.That(carThree.NextFloor, Is.EqualTo(4));
         });
     }
 
